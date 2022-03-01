@@ -1,0 +1,31 @@
+Abordarea implementarii:
+    Incep prin parsarea tabelei de rutare. O sortez crescator dupa prefix si
+descrescator dupa masca. De ce? Pentru a putea efectua apoi o cautare binara,
+dupa prefix, iar in momentul in care iph−>daddr&f.mask == f.prefix, caut liniar
+in spate masca cea mai mare pana cand prefix-ul incepe sa difere. De ce nu am
+sortat crescator si dupa masca? Nu ne asigura nimeni ca intr-un alt block de
+prefixe se afla cumva o masca mai mare decat in blocul precedent. Astfel ne asi-
+guram de corectitudinea algoritmului LPM.
+
+Initializez tabela arp redimensionabila si coada pentru packete care trebuie
+transmise.
+
+Primesc un packet, verific prima data daca este de tip ICMP_ECHO si ii trimit
+REPLY.
+
+Daca este un packet de tip ARP, verific daca este de tip request, pentru a trimite
+mac-ul routerului. Altfel, verific daca mac-ul primit exista in tabela arp, il 
+inregistrez si, eventual, maresc tabela pentru alte intrari. Dupa trimit packetele
+care se aflau la momentul respectiv in coada si pentru care am aflat mac-ul.
+
+Verific TTL, checksumul si, daca sunt corecte, le updatez.
+
+Caut cea mai buna ruta in tabela de rutare folosind algoritmul LPM cu cautare binara
+,iar daca rezultatul este diferit de NULL, verific daca exista mac-ul next_hop-ului
+in tabela arp. Daca nu exista, trimitem un request si adaugam o copie a packetului
+in coada de transmitere. Daca mac-ul deja exista, modificam headerul de ethernet 
+si trimitem direct packetul. 
+
+In cazul in care ruta este nula, trimitem host unreachable si dam discard la packet.
+
+Eliberam memoria.
